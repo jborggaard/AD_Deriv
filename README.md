@@ -26,8 +26,19 @@ finite differences in other automatic differentiation algorithms.
 
 Repository Contents
 --------
-* _Deriv_  A Matlab class (this can stand alone, and must be in your path)
-* Get_value 
+* _Deriv_  A Matlab class (this can stand alone and must be in your path) that implements automatic differentiation by operator overloading.  All of the overloaded _double_ functions are contained in this file.
+
+* _Dzeros_  A Matlab function that takes care of the preallocation problem.  Any preallocated variables in your differentiated function that depend on the independent variable must be replaced with this Dzeros function for now.  A simple global change and replace zeros->Dzeros would work, though more efficiency can be introduced by selectively replacing only those functions that are affected by the independent variable.
+
+* _Get_gradient_  A Matlab function that uses the forward mode of automatic differentiation to compute the gradient of a function.
+
+* _LICENSE.md_  The LGPL license.
+
+* _README.md_  This file.
+
+* _Set_variable_  A Matlab function that defines the independent variable for automatic differentiation.
+
+* _test_Deriv_  A series of unit tests for _Deriv_.
 
 
 Basic Introduction
@@ -37,26 +48,43 @@ To illustrate how this works, we use the function *Set_variable* to define
 the variable used as the independent variable.  Any number of intermediate
 calculations (with or without using alpha) can be performed.  The derivative
 of those calculations with respect to alpha can be extracted with the 
-embedded *Get_deriv* method (hidden inside *Deriv*)
-.
-> >> alpha = Set_variable(7);
-> >>
-> >> %  Perform intermediate calculations to arrive at the desired output.
-> >> output = exp((alpha-5)^3)*sin(alpha);
-> >> f = Get_value(output);   % extracts the value of the output
-> >> d = Get_deriv(output);   % extracts the derivative of the output wrt alpha
-> >>
-> >> disp(f)
->    1.9584e+03
->
-> >> disp(d)
->    2.5749e+04
->
+embedded *Get_deriv* method (hidden inside *Deriv*).
+
+```matlab
+    >> alpha = Set_variable(7);
+    >>
+    >> % Perform intermediate calculations to arrive at the desired output.
+    >>
+    >> output = exp((alpha-5)^3)*sin(alpha);
+    >> f = Get_value(output);  % extracts the value of the output
+    >> d = Get_deriv(output);  % extracts the derivative of the output wrt alpha
+    >>
+    >> disp(f)
+       1.9584e+03
+   
+    >> disp(d)
+       2.5749e+04
+
+Development Tasks
+--------
+- [x] overload basic double operators
+- [x] overload matrix functions
+- [ ] overload ode/dae solvers
+- [ ] overload interp options
+
+- [x] scalar variable, forward mode
+- [ ] vector variable, forward mode
+- [ ] vector variable, reverse mode
+- [ ] Jacobian-vector product, reverse mode
+
+- [ ] user documentation (this README.md)
+- [ ] algorithm documentation (paper, wiki)
+
 
 Author
 --------
 Jeff Borggaard, Interdisciplinary Center for Applied Mathematics, Virginia Tech
-> jborggaard@vt.edu
+jborggaard@vt.edu
 
 License
 --------
