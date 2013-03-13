@@ -64,6 +64,7 @@ embedded *Get_deriv* method (hidden inside *Deriv*).
    
     >> disp(d)
        2.5749e+04
+````
 
 Development Tasks
 --------
