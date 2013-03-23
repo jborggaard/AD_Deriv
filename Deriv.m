@@ -386,17 +386,25 @@ classdef Deriv
       m = numel(c.x);
     end
     
-    function [out] = size(c,n)
-      if ( nargout==0 )
-        if ( nargin==1 )
-          display(size(c.x))
-        else
-          display(size(c.x,n))
-        end
-      elseif ( nargin==1 )
-        out = size(c.x);
-      else
+    function [varargout] = size(c,n)
+      if ( nargout==1 && nargin==2 )
         out = size(c.x,n);
+        varargout = {out};
+      elseif ( nargout>1 && nargin==2 )
+        error('Too many output arguments.')
+      else
+        out = size(c.x);
+           
+        if ( nargout==1 )
+          varargout = {out};
+          
+        elseif ( nargout>1 )
+          m = length(out);
+          varargout = cell(1,m);
+          for i=1:m
+            varargout{i} = out(i);
+          end
+        end
       end
     end
     %%  
@@ -431,9 +439,9 @@ classdef Deriv
     
     function obj = plus(c,d)
       if ( ~isa(c,'Deriv') )                       % c is a scalar, d is a Deriv
-        obj = Deriv( c + d.x, d.dx*ones(size(c)) );
+        obj = Deriv( c + d.x, d.dx.*ones(size(c)) );
       elseif ( ~isa(d,'Deriv') )                   % d is a scalar, c is a Deriv
-        obj = Deriv( c.x + d, c.dx*ones(size(d)) );
+        obj = Deriv( c.x + d, c.dx.*ones(size(d)) );
       else
         obj = Deriv( c.x  + d.x, c.dx + d.dx );
       end
