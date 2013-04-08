@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>AD_Deriv by jborggaard</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>AD_Deriv</h1>
+        <p>Automatic Differentiation Tools for Matlab</p>
+
+        <p class="view"><a href="https://github.com/jborggaard/AD_Deriv">View the Project on GitHub <small>jborggaard/AD_Deriv</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/jborggaard/AD_Deriv/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/jborggaard/AD_Deriv/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/jborggaard/AD_Deriv">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<em>Deriv</em> - A set of Matlab tools for Automatic Differentiation</h1>
+
+<h2>Overview</h2>
+
+<p>This directory contains a set of tools for performing automatic differentiation
+in Matlab.  Automatic differentiation is performed using Matlab's operator
+overloading.  The intention is to replace <em>double</em> objects with <em>Deriv</em> objects
+(which contain both values of the variable (acting as a double) as well as the
+derivative of the variable with respect to the parameter(s) of interest.
+To perform the derivative calculations in Matlab, Deriv must overload any of 
+the <em>double</em> class operators that Matlab encounters when executing your
+function.  The value of the derivative of any intermediate calculation can
+be extracted using the <em>Get_deriv</em> function.  </p>
+
+<p>A differentiating feature of <em>Deriv</em> is that it goes back to the continuous 
+form of a problem to compute derivatives of non-differentiable objects.  For
+example, we avoid differentiation of the time-step selection process in <em>ode23</em>
+by simultaneously computing the solution of the original and differentiated
+ode in our own algorithm.  This includes new algorithms for implementation 
+of Matlab functions such as <em>interp1</em>, <em>QR</em>, etc., which would be approximated by
+finite differences in other automatic differentiation algorithms.</p>
+
+<h2>Repository Contents</h2>
+
+<ul>
+<li><p><em>Deriv</em>  A Matlab class (this can stand alone and must be in your path) that implements automatic differentiation by operator overloading.  All of the overloaded <em>double</em> functions are contained in this file.</p></li>
+<li><p><em>Dzeros</em>  A Matlab function that takes care of the preallocation problem.  Any preallocated variables in your differentiated function that depend on the independent variable must be replaced with this Dzeros function for now.  A simple global change and replace zeros-&gt;Dzeros would work, though more efficiency can be introduced by selectively replacing only those functions that are affected by the independent variable.</p></li>
+<li><p><em>Get_gradient</em>  A Matlab function that uses the forward mode of automatic differentiation to compute the gradient of a function.</p></li>
+<li><p><em>LICENSE.md</em>  The LGPL license.</p></li>
+<li><p><em>README.md</em>  This file.</p></li>
+<li><p><em>Set_variable</em>  A Matlab function that defines the independent variable for automatic differentiation.</p></li>
+<li><p><em>test_Deriv</em>  A series of unit tests for <em>Deriv</em>.</p></li>
+</ul><h2>Basic Introduction</h2>
+
+<p>To illustrate how this works, we use the function <em>Set_variable</em> to define
+the variable used as the independent variable.  Any number of intermediate
+calculations (with or without using alpha) can be performed.  The derivative
+of those calculations with respect to alpha can be extracted with the 
+embedded <em>Get_deriv</em> method (hidden inside <em>Deriv</em>).</p>
+
+<div class="highlight"><pre>    <span class="o">&gt;&gt;</span> <span class="n">alpha</span> <span class="p">=</span> <span class="n">Set_variable</span><span class="p">(</span><span class="mi">7</span><span class="p">);</span>
+    <span class="o">&gt;&gt;</span>
+    <span class="o">&gt;&gt;</span> <span class="c">% Perform intermediate calculations to arrive at the desired output.</span>
+    <span class="o">&gt;&gt;</span>
+    <span class="o">&gt;&gt;</span> <span class="n">output</span> <span class="p">=</span> <span class="nb">exp</span><span class="p">((</span><span class="n">alpha</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>^<span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="nb">sin</span><span class="p">(</span><span class="n">alpha</span><span class="p">);</span>
+    <span class="o">&gt;&gt;</span> <span class="n">f</span> <span class="p">=</span> <span class="n">Get_value</span><span class="p">(</span><span class="n">output</span><span class="p">);</span>  <span class="c">% extracts the value of the output</span>
+    <span class="o">&gt;&gt;</span> <span class="n">d</span> <span class="p">=</span> <span class="n">Get_deriv</span><span class="p">(</span><span class="n">output</span><span class="p">);</span>  <span class="c">% extracts the derivative of the output wrt alpha</span>
+    <span class="o">&gt;&gt;</span>
+    <span class="o">&gt;&gt;</span> <span class="nb">disp</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+       <span class="mf">1.9584e+03</span>
+
+    <span class="o">&gt;&gt;</span> <span class="nb">disp</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+       <span class="mf">2.5749e+04</span>
+</pre></div>
+
+<h2>Development Tasks</h2>
+
+<ul>
+<li>[x] overload basic double operators</li>
+<li>[x] overload matrix functions</li>
+<li>[ ] overload ode/dae solvers</li>
+<li><p>[ ] overload interp options</p></li>
+<li><p>[x] scalar variable, forward mode</p></li>
+<li><p>[ ] vector variable, forward mode</p></li>
+<li><p>[ ] vector variable, reverse mode</p></li>
+<li><p>[ ] Jacobian-vector product, reverse mode</p></li>
+<li><p>[ ] user documentation (this README.md)</p></li>
+<li><p>[ ] algorithm documentation (paper, wiki)</p></li>
+</ul><h2>Author</h2>
+
+<p>Jeff Borggaard, Interdisciplinary Center for Applied Mathematics, Virginia Tech
+<a href="mailto:jborggaard@vt.edu">jborggaard@vt.edu</a></p>
+
+<h2>License</h2>
+
+<p>These files are provided under the Gnu LGPL License.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/jborggaard">jborggaard</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
