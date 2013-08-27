@@ -126,6 +126,18 @@ classdef Deriv
       end
     end
     
+    function [] = fprintf(varargin)
+      bypass = Deriv( 1, 1 );
+      [X,DX] = process_varargin(varargin,bypass);
+      
+      if ( ischar(X{1}) )
+        fprintf(X{1},X{2:end});
+      else
+        fprintf(X{1},X{2},X{3:end});
+      end
+    end
+    
+    
     function bool = iscolumn(c)
       bool = iscolumn(c.x);
     end
@@ -1311,8 +1323,11 @@ classdef Deriv
       Sdx = spdiags(d',0,sr,sc);
       
       % with the SVD of A.x, we could simplify the computation below...
-      for i=1:sc
-        c        = (A.x'*A.x - Sx(i,i)^2*eye(sc)) \ ( 2*Sdx(i,i)*Sx(i,i)*Vx(:,i) - ( A.dx'*A.x+A.x'*A.dx )*Vx(:,i) );
+      for i=1:n  % was sc
+%        c        = (A.x'*A.x - Sx(i,i)^2*eye(sc)) \ ( 2*Sdx(i,i)*Sx(i,i)*Vx(:,i) - ( A.dx'*A.x+A.x'*A.dx )*Vx(:,i) );
+        idx = [1:i-1, i+1:n];
+        eig( Vx(:,idx)*(Sx(idx,idx)'*Sx(idx,idx)-Sx(idx,idx)*speye(n-1))*Vx(:,idx)' ) 
+        c        = (Vx(:,idx)*(Sx(idx,idx)'*Sx(idx,idx)-Sx(idx,idx)*speye(n-1))*Vx(:,idx)') \ ( 2*Sdx(i,i)*Sx(i,i)*Vx(:,i) - ( A.dx'*A.x+A.x'*A.dx )*Vx(:,i) );
         Vdx(:,i) = c - (c'*Vx(:,i))*Vx(:,i);
       end
       
