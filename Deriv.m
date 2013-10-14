@@ -11,8 +11,7 @@ classdef Deriv
   %
   %   Some of these functions rely on the control toolbox.
   %
-  %   Currently limited to one design parameter and only the forward mode is
-  %   implemented for now.
+  %   Currently we have only implemented the forward mode for now.
   %
   %   Author:  Jeff Borggaard, 2012
   %            Virginia Tech
@@ -45,7 +44,7 @@ classdef Deriv
     function obj = Deriv(c,d)
       % Usage: Deriv(c,d) constructs a Deriv object: 
       %   "c" is the value associated with c, and 
-      %   "d" is the derivative of c with respect to the "parameter"
+      %   "d" is the derivative of c with respect to the vector of "parameters"
       if ( nargin==0 )
         obj.x  = 0;
         obj.dx = 0;
@@ -1326,7 +1325,7 @@ classdef Deriv
       for i=1:n  % was sc
 %        c        = (A.x'*A.x - Sx(i,i)^2*eye(sc)) \ ( 2*Sdx(i,i)*Sx(i,i)*Vx(:,i) - ( A.dx'*A.x+A.x'*A.dx )*Vx(:,i) );
         idx = [1:i-1, i+1:n];
-        eig( Vx(:,idx)*(Sx(idx,idx)'*Sx(idx,idx)-Sx(idx,idx)*speye(n-1))*Vx(:,idx)' ) 
+        %eig( Vx(:,idx)*(Sx(idx,idx)'*Sx(idx,idx)-Sx(idx,idx)*speye(n-1))*Vx(:,idx)' ) 
         c        = (Vx(:,idx)*(Sx(idx,idx)'*Sx(idx,idx)-Sx(idx,idx)*speye(n-1))*Vx(:,idx)') \ ( 2*Sdx(i,i)*Sx(i,i)*Vx(:,i) - ( A.dx'*A.x+A.x'*A.dx )*Vx(:,i) );
         Vdx(:,i) = c - (c'*Vx(:,i))*Vx(:,i);
       end
