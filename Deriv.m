@@ -429,9 +429,17 @@ classdef Deriv
     
     function obj = minus(c,d)
       if ( ~isa(c,'Deriv') )                       % c is a scalar, d is a Deriv
-        obj = Deriv( c - d.x, - d.dx );
+        if ( issparse(d.dx) )
+          obj = Deriv( c - d.x, - d.dx );
+        else
+          obj = Deriv( c - d.x, - d.dx.*ones(size(c)) );
+        end
       elseif ( ~isa(d,'Deriv') )                   % d is a scalar, c is a Deriv
-        obj = Deriv( c.x - d, c.dx );
+        if ( issparse(c.dx) )
+          obj = Deriv( c.x - d, c.dx );
+        else
+          obj = Deriv( c.x - d, c.dx.*ones(size(d)) );
+        end
       else
         obj = Deriv( c.x - d.x, c.dx - d.dx );
       end
@@ -450,9 +458,17 @@ classdef Deriv
     
     function obj = plus(c,d)
       if ( ~isa(c,'Deriv') )                       % c is a scalar, d is a Deriv
-        obj = Deriv( c + d.x, d.dx.*ones(size(c)) );
+        if ( issparse(d.dx) )         % maintain sparsity if applicable
+          obj = Deriv( c + d.x, d.dx );
+        else
+          obj = Deriv( c + d.x, d.dx.*ones(size(c)) );
+        end
       elseif ( ~isa(d,'Deriv') )                   % d is a scalar, c is a Deriv
-        obj = Deriv( c.x + d, c.dx.*ones(size(d)) );
+        if ( issparse(c.dx) )         % maintain sparsity if applicable
+          obj = Deriv( c.x + d, c.dx );
+        else
+          obj = Deriv( c.x + d, c.dx.*ones(size(d)) );
+        end
       else
         obj = Deriv( c.x  + d.x, c.dx + d.dx );
       end
