@@ -90,3 +90,7 @@ jborggaard@vt.edu
 License
 --------
 These files are provided under the Gnu LGPL License.
+
+Acknowledgments
+---------------
+This software was developed as auxiliary software to support the computation of sensitivity derivatives and derivatives for optimization for a number of research projects including funded projects by the Air Force Office of Scientific Research under contracts FA9550-10-1-0201 and FA9550-12-0-0173, the Department of Energy under contract DE-EE0004261 and National Science Foundation under contracts DMS-1016450 and EAR-0943415.  This support is greatly appreciated and facilitates additional software projects such as this one.
