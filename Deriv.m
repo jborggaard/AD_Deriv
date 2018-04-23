@@ -16,6 +16,10 @@ classdef Deriv
   %   Author:  Jeff Borggaard, 2012
   %            Virginia Tech
   %
+  %            Christopher Jones, 2018
+  %            Virginia Tech  
+  %              (added implementations of ODE solvers)
+  %
   %   License:  This code is distributed under the Gnu LGPL license.
   %
   %   References include:
@@ -2091,10 +2095,125 @@ classdef Deriv
     end
     
     % ode23s
+    function [t,y,te,ye,ie] = ode23s(odefun,tspan,y0,options)
+    % Matlab ode23s: solves stiff differential equations using a low order 
+    % method. This function overloads it to compute the derivative of the 
+    % ode23s solution with respect to a parameter in y0 or odefun.
+      if ( nargin==3 )
+          options = odeset();
+      end
+
+      [t,yx] = ode23s(odefun,tspan,y0.x,options);
+
+      % now integrate the sensitivity equation using the same time steps
+      % following the 2nd order method outlined in bogacki1989a32.pdf
+      [nsteps,ndim] = size(yx);
+      s = zeros(nsteps,ndim);
+      s(1,:) = y0.dx;
+
+      d = 1/(2+sqrt(2));
+      c32 = 6 + sqrt(2);
+
+      fac = [];
+  
+      for n=1:nsteps-1
+        yn = Deriv(yx(n,:),s(n,:));
+        f0 = feval(odefun, t(n), yn );
     
+        h  = t(n+1)-t(n);
+        [J,fac] = numjac(odefun,t(n),yx(n,:)',f0.x,1e-9,fac); % partial derivative of odefun with respect to y
+        T = (feval(odefun,t(n)+1e-7,yx(n,:))-f0.x)/1e-7;      % partial derivative of odefun with respect to t
+        W = eye(ndim) - h * d * J;                            % (W is I-hdJ without the Deriv part)
+
+        f0 = h * f0;    % to match formula on page 12  (f0 is now h * f(t(n),y(n)))
+        k1 = W\ (f0 + h * d * T);
+        f1 = feval(odefun, t(n)+0.5*h, yn + 0.5*h*k1);
+        k2 = W\ (f1 - k1) + k1;  % only built to get the .dx part of it
+        %ynp1 = yn + h*k2;       % the .x part of this should match yx(:,n+1)   
+        %f2 = feval(t(n+1), yn);
+        %k3 = W\ (f2 - c32 * (k2-f1) - 2*(k1 - f0) + h * d * t(j-1));
+        s(n+1,:) = s(n,:) + h * k2.dx;
+      end
+
+      y = Deriv( yx, s );
+        
+    end
+
     % ode23t
+    function [t,y,te,ye,ie] = ode23t(odefun,tspan,y0,options)
+      % Solve moderately stiff ODEs and DAEs with a trapezoidal rule
+      if (nargin == 3)
+        options = odeset();
+      end
+
+      [t,yx] = ode23t(odefun,tspan,y0.x,options);
+        
+      [nsteps,ndim] = size(yx);
+      s = zeros(nsteps,ndim);
+      s(1,:) = y0.dx;
+        
+      for j=2:nsteps
+        y0 = Deriv(yx(j-1,:),s(j-1,:));
+        h = t(j)-t(j-1);
+        f1 = feval(odefun, t(j-1), y0 );
+        yp = y0 + (h * f1);
+        tp = t(j-1)+h;
+        f2 = feval(odefun, tp, yp);
+        s(j,:) = s(j-1,:) + (1/2)* h * (f1.dx + f2.dx); 
+      end
+        
+      y = Deriv(yx,s);
+    end
     
     % ode23tb
+    function [t,y,te,ye,ie] = ode23tb(odefun,tspan,y0,options)
+      % Solve stiff differential equations with a combined trapezoidal rule 
+      % + backward differentiation formula
+      if (nargin == 3)
+        options = odeset();
+      end
+
+      [t,yx] = ode23tb(odefun,tspan,y0.x,options);
+        
+      [nsteps,ndim] = size(yx);
+      s = zeros(nsteps,ndim);
+      g = zeros(nsteps,ndim);
+      s(1,:) = y0.dx;
+      g(1,:) = y0.dx;
+        
+      gamma = 2 - sqrt(2);
+       
+      ogam = 1 - gamma;
+      ugam = 2 - gamma;
+      pgam = gamma * ugam;
+        
+      g1 = 1/(pgam);
+      g2 = (ogam^2)/pgam;
+      g3 = (ogam)/(ugam);
+        
+      for j=2:nsteps
+        y0 = Deriv(yx(j-1,:),s(j-1,:));
+        yg0 = Deriv(yx(j-1,:),g(j-1,:));
+            
+        h = t(j)-t(j-1);
+        f1 = feval(odefun, t(j-1), y0 );
+        f1g = feval(odefun, t(j-1), yg0 );
+           
+        yp = y0 + (h * f1);
+        yg = y0 + (h * f1g);
+            
+        tp = t(j-1)+h;
+        tg = t(j-1)+gamma*h;
+            
+        f2 = feval(odefun, tp, yp);
+        f2g = feval(odefun, tg, yg);
+            
+        g(j,:) = s(j-1,:) + (gamma/2) * h * (f1.dx + f2g.dx);
+        s(j,:) =  (g1 * g(j,:)) - (g2 * s(j-1,:)) + (g3 * h * f2.dx);
+      end
+        
+      y = Deriv(yx,s);
+    end
     
     % ode45
     function [t,y,te,ye,ie] = ode45(odefun,tspan,y0,options)

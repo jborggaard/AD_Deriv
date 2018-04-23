@@ -7,22 +7,22 @@ function [ success ] = test_Deriv(  )
   verbose = false;   % flag that determines the output level
   success = true;
   
-  tcase.arithmetic  = 1;
-  tcase.array_manip = 1;
-  tcase.sparse      = 1;
+  tcase.arithmetic  = 0;
+  tcase.array_manip = 0;
+  tcase.sparse      = 0;
   
-  tcase.chol        = 1;  % matrix factorizations / equations
+  tcase.chol        = 0;  % matrix factorizations / equations
   tcase.eig         = 0;
-  tcase.lqr         = 1;
-  tcase.lyap        = 1;
-  tcase.norm        = 1;
-  tcase.hess        = 1;
-  tcase.qr          = 1;
-  tcase.svd         = 1;
+  tcase.lqr         = 0;
+  tcase.lyap        = 0;
+  tcase.norm        = 0;
+  tcase.hess        = 0;
+  tcase.qr          = 0;
+  tcase.svd         = 0;
   
-  tcase.abs         = 1;  % nondifferentiable Matlab functions
-  tcase.interp1     = 1;
-  tcase.ode         = 0;
+  tcase.abs         = 0;  % nondifferentiable Matlab functions
+  tcase.interp1     = 0;
+  tcase.ode         = 1;
   
   %% ---------------------------------------------------------------------------
   %  Testing arithmetic operations
@@ -626,7 +626,7 @@ function [ success ] = test_Deriv(  )
     fprintf('\n')    
   end
   
-  %-----------------------------------------------------------------------------
+  %% ---------------------------------------------------------------------------
   %  Testing ode/dae solvers
   %-----------------------------------------------------------------------------
   if (tcase.ode)
@@ -693,9 +693,141 @@ function [ success ] = test_Deriv(  )
 %     plot(Tp,'ko')
 %     plot(T,'b+')
     
+    %---------------------------------------------------------------------------
+    %  Testing ODE Solvers Using y' = y^2, y(0)=y0     s = dy/d y0.
+    %      Therefore, y(t)=y0/(1-y0*t) and s(t) = y0*t/(1-y0*t)^2 + 1/(1-y0*t)
+    %---------------------------------------------------------------------------
+    %  Testing ode23:
+    %---------------------------------------------------------------------------
+    fprintf(' Testing ode23:\n')
+    tspan = [0,.1];
+    y0   = Deriv(.999,1);
+    y0x  = Get_value(y0);
+    y0dx = Get_deriv(y0);
+    ydot = @(t,y)(y.^2);
+
+    [Tode23,Yode23] = ode23(ydot,tspan,y0);
+    yDeriv = Get_value(Yode23);
+    sDeriv = Get_deriv(Yode23);
+
+    sExact = zeros(size(Yode23));
+    for i=1:length(Tode23)
+      sExact(i) = (y0x*Tode23(i))./(1-y0x*Tode23(i)).^2 + 1./(1-y0x*Tode23(i));
+    end
+
+    fprintf('          T           Sode23          sExact    \n')
+    for i=1:length(Tode23)
+      fprintf('  %12.4f    %12.8f    %12.8f\n',Tode23(i),sDeriv(i),sExact(i));
+    end
+
+    fprintf('\n\n')
+
+    % %---------------------------------------------------------------------------
+    % %  Testing ode113:
+    % %---------------------------------------------------------------------------
+    % fprintf(' Testing ode113:\n')
+    % [Tode113,Yode113] = ode113Test1(ydot,tspan,y0);
+    % yDeriv = Get_value(Yode113);
+    % sDeriv = Get_deriv(Yode113);
+    % 
+    % sExact = zeros(size(Yode113));
+    % for i=1:length(Tode113)
+    %   sExact(i) = (y0x*Tode113(i))./(1-y0x*Tode113(i)).^2 + 1./(1-y0x*Tode113(i));
+    % end
+    % 
+    % fprintf('          T           Sode113         sExact    \n')
+    % for i=1:length(Tode113)
+    %   fprintf('  %12.4f    %12.8f    %12.8f\n',Tode113(i),sDeriv(i),sExact(i));
+    % end
+    % 
+    % fprintf('\n\n')
+
+    %---------------------------------------------------------------------------
+    %  Testing ode23s:
+    %---------------------------------------------------------------------------
+    fprintf(' Testing ode23s:\n')
+    [Tode23s,Yode23s] = ode23s(ydot,tspan,y0);
+
+    yDeriv = Get_value(Yode23s);
+    sDeriv = Get_deriv(Yode23s);
+
+    sExact = zeros(size(Yode23s));
+    for i=1:length(Tode23s)
+      sExact(i) = (y0x*Tode23s(i))./(1-y0x*Tode23s(i)).^2 + 1./(1-y0x*Tode23s(i));
+    end
+
+    fprintf('          T           Sode23s         sExact    \n')
+    for i=1:length(Tode23s)
+      fprintf('  %12.4f    %12.8f    %12.8f\n',Tode23s(i),sDeriv(i),sExact(i));
+    end
+
+    fprintf('\n\n')
+
+    %---------------------------------------------------------------------------
+    %  Testing ode23t:
+    %---------------------------------------------------------------------------
+    fprintf(' Testing ode23t:\n')
+    [Tode23t,Yode23t] = ode23t(ydot,tspan,y0);
+
+    yDeriv = Get_value(Yode23t);
+    sDeriv = Get_deriv(Yode23t);
+
+    sExact = zeros(size(Yode23t));
+    for i=1:length(Tode23t)
+      sExact(i) = (y0x*Tode23t(i))./(1-y0x*Tode23t(i)).^2 + 1./(1-y0x*Tode23t(i));
+    end
+
+    fprintf('          T           Sode23s         sExact    \n')
+    for i=1:length(Tode23t)
+      fprintf('  %12.4f    %12.8f    %12.8f\n',Tode23t(i),sDeriv(i),sExact(i));
+    end
+
+    fprintf('\n\n')
+
+    %---------------------------------------------------------------------------
+    %  Testing ode23tb:
+    %---------------------------------------------------------------------------
+    fprintf(' Testing ode23tb:\n')
+    [Tode23tb,Yode23tb] = ode23tb(ydot,tspan,y0);
+
+    yDeriv = Get_value(Yode23tb);
+    sDeriv = Get_deriv(Yode23tb);
+
+    sExact = zeros(size(Yode23tb));
+    for i=1:length(Tode23tb)
+      sExact(i) = (y0x*Tode23tb(i))./(1-y0x*Tode23tb(i)).^2 + 1./(1-y0x*Tode23tb(i));
+    end
+
+    fprintf('          T           Sode23s         sExact    \n')
+    for i=1:length(Tode23tb)
+      fprintf('  %12.4f    %12.8f    %12.8f\n',Tode23tb(i),sDeriv(i),sExact(i));
+    end
+
+    fprintf('\n\n')
+
+    %---------------------------------------------------------------------------
+    %  Testing ode45:
+    %---------------------------------------------------------------------------
+    fprintf(' Testing ode45:\n')
+    [Tode45,Yode45] = ode45(ydot,tspan,y0);
+    yDeriv = Get_value(Yode45);
+    sDeriv = Get_deriv(Yode45);
+
+    sExact = zeros(size(Yode45));
+    for i=1:length(Tode45)
+      sExact(i) = (y0x*Tode45(i))./(1-y0x*Tode45(i)).^2 + 1./(1-y0x*Tode45(i));
+    end
+
+    fprintf('          T           Sode23          sExact    \n')
+    for i=1:length(Tode45)
+      fprintf('  %12.4f    %12.8f    %12.8f\n',Tode45(i),sDeriv(i),sExact(i));
+    end
+
+    fprintf('\n\n')
     
   end
   
+%% 
   if ( success )
     fprintf(' Deriv passed all of the following tests\n')
     if (tcase.arithmetic), fprintf('  arithmetic\n'); end 
